@@ -4,6 +4,7 @@ Newcastle ’97ers rowing performance tracking
 ``` r
 library(tidyverse)
 library(googlesheets4)
+library(lme4)
 library(lubridate)
 library(janitor)
 library(skimr)
@@ -79,7 +80,7 @@ calculate_days_between <- function(data) {
   data %>%
     arrange(rower, date) %>%
     group_by(rower) %>%
-    mutate(days_between_sessions = as.numeric(date - lag(date, default = first(date))))
+    mutate(days_between_sessions = as.numeric(difftime(date, lag(date, default = first(date)), units="days")))
 }
 
 calculate_relative_improvement <- function(data) {
@@ -97,6 +98,10 @@ processed_data <- rowing_data %>%
   calculate_burnout_index() %>%
   calculate_relative_improvement()
 
+# skim(processed_data)
+```
+
+``` r
 summary_stats <- processed_data %>%
   group_by(rower) %>%
   summarise(
@@ -127,7 +132,7 @@ ggplot(processed_data, aes(x = date, y = burnout_index, color = rower)) +
   theme_minimal()
 ```
 
-![](row-tracking_files/figure-gfm/unnamed-chunk-3-1.png)<!-- -->
+![](row-tracking_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
 ggplot(processed_data, aes(x = date, y = relative_improvement, color = rower)) +
@@ -139,7 +144,7 @@ ggplot(processed_data, aes(x = date, y = relative_improvement, color = rower)) +
   theme_minimal()
 ```
 
-![](row-tracking_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](row-tracking_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ``` r
 ggplot(processed_data, aes(x = date, y = efficiency, color = rower)) +
@@ -151,7 +156,7 @@ ggplot(processed_data, aes(x = date, y = efficiency, color = rower)) +
   theme_minimal()
 ```
 
-![](row-tracking_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](row-tracking_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 ``` r
 ggplot(processed_data, aes(x = date, y = speed, color = rower)) +
@@ -163,4 +168,46 @@ ggplot(processed_data, aes(x = date, y = speed, color = rower)) +
   theme_minimal()
 ```
 
-![](row-tracking_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](row-tracking_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+``` r
+# Mixed-Effects Model
+speed_model <- lmer(speed ~ days_between_sessions + (1 + days_between_sessions|rower), data=processed_data)
+```
+
+    ## boundary (singular) fit: see ?isSingular
+
+``` r
+# Visualizations
+
+# Individual trajectories of speed over time
+ggplot(processed_data, aes(x=days_between_sessions, y=speed, color=rower)) +
+  geom_line() +
+  labs(title="Individual Speed Trajectories Over Time", x="Days Between Sessions", y="Speed")
+```
+
+![](row-tracking_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+``` r
+# Boxplots for speed, efficiency, and workload
+metrics_list <- list("Speed" = processed_data$speed,
+                    "Efficiency" = processed_data$efficiency,
+                    "Workload" = processed_data$workload)
+
+for(metric_name in names(metrics_list)) {
+  print(ggplot(processed_data, aes(x=rower, y=metrics_list[[metric_name]], fill=rower)) +
+    geom_boxplot() +
+    labs(title=paste(metric_name, "by Rower"), x="Rower", y=metric_name))
+}
+```
+
+![](row-tracking_files/figure-gfm/unnamed-chunk-8-2.png)<!-- -->![](row-tracking_files/figure-gfm/unnamed-chunk-8-3.png)<!-- -->![](row-tracking_files/figure-gfm/unnamed-chunk-8-4.png)<!-- -->
+
+``` r
+# Scatter plot of speed vs efficiency
+ggplot(processed_data, aes(x=speed, y=efficiency, color=rower)) +
+  geom_point() +
+  labs(title="Speed vs. Efficiency", x="Speed", y="Efficiency")
+```
+
+![](row-tracking_files/figure-gfm/unnamed-chunk-8-5.png)<!-- -->
