@@ -1,0 +1,122 @@
+---
+title: "Newcastle '97ers rowing performance tracking"
+output: github_document
+---
+
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(googlesheets4)
+library(lubridate)
+library(janitor)
+library(skimr)
+library(here)
+
+gs_url <- "https://docs.google.com/spreadsheets/d/1GxCmTZ8E1-y-wfgvKNHqYh4cazBaKz2s1CS8alvqQ-Q/edit#gid=935753699"
+rowing_data <- read_sheet(gs_url, sheet = "Erg Times") %>% clean_names()
+
+skim(rowing_data)
+```
+
+```{r, message=FALSE, warning=FALSE}
+calculate_days_between <- function(data) {
+  data %>%
+    arrange(rower, date) %>%
+    group_by(rower) %>%
+    mutate(days_between_sessions = date - lag(date, default = first(date)))
+}
+
+calculate_speed <- function(data) {
+  data %>% mutate(speed = distance / time_mins)
+}
+
+calculate_efficiency <- function(data) {
+  data %>% mutate(efficiency = distance / stroke_rate)
+}
+
+calculate_workload <- function(data) {
+  data %>% mutate(workload = speed * erg_no)
+}
+
+calculate_burnout_index <- function(data) {
+  data %>% mutate(burnout_index = workload / days_between_sessions - efficiency)
+}
+
+calculate_days_between <- function(data) {
+  data %>%
+    arrange(rower, date) %>%
+    group_by(rower) %>%
+    mutate(days_between_sessions = as.numeric(date - lag(date, default = first(date))))
+}
+
+calculate_relative_improvement <- function(data) {
+  data %>%
+    group_by(rower) %>%
+    mutate(baseline_speed = first(speed),
+           relative_improvement = (speed - baseline_speed) / baseline_speed * 100)
+}
+
+processed_data <- rowing_data %>%
+  calculate_days_between() %>%
+  calculate_speed() %>%
+  calculate_efficiency() %>%
+  calculate_workload() %>%
+  calculate_burnout_index() %>%
+  calculate_relative_improvement()
+
+summary_stats <- processed_data %>%
+  group_by(rower) %>%
+  summarise(
+    avg_speed = mean(speed, na.rm = TRUE),
+    avg_efficiency = mean(efficiency, na.rm = TRUE),
+    total_distance = sum(distance, na.rm = TRUE),
+    total_time = sum(time_mins, na.rm = TRUE),
+    avg_burnout_index = mean(burnout_index, na.rm = TRUE)
+  )
+
+print(summary_stats)
+```
+
+```{r, message=FALSE, warning=FALSE}
+ggplot(processed_data, aes(x = date, y = burnout_index, color = rower)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(title = "Burnout Index Over Time",
+       y = "Burnout Index",
+       x = "Date") +
+  theme_minimal()
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+ggplot(processed_data, aes(x = date, y = relative_improvement, color = rower)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(title = "Relative Improvement Over Time",
+       y = "Improvement (%)",
+       x = "Date") +
+  theme_minimal()
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+ggplot(processed_data, aes(x = date, y = efficiency, color = rower)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +  # 'se = FALSE' removes the shading around the trend line.
+  labs(title = "Stroke Efficiency Over Time",
+       y = "Efficiency (distance/stroke rate)",
+       x = "Date") +
+  theme_minimal()
+
+```
+
+```{r, message=FALSE, warning=FALSE}
+ggplot(processed_data, aes(x = date, y = speed, color = rower)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  labs(title = "Performance Score over Time",
+       y = "Speed (m/min)",
+       x = "Date") +
+  theme_minimal()
+```
+
