@@ -18,7 +18,7 @@ skim(rowing_data)
 |                                                  |             |
 |:-------------------------------------------------|:------------|
 | Name                                             | rowing_data |
-| Number of rows                                   | 41          |
+| Number of rows                                   | 44          |
 | Number of columns                                | 6           |
 | \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_   |             |
 | Column type frequency:                           |             |
@@ -38,12 +38,12 @@ Data summary
 
 **Variable type: numeric**
 
-| skim_variable | n_missing | complete_rate |    mean |     sd |  p0 |  p25 |  p50 |  p75 | p100 | hist  |
-|:--------------|----------:|--------------:|--------:|-------:|----:|-----:|-----:|-----:|-----:|:------|
-| erg_no        |         0 |             1 |    2.12 |   1.17 |   1 |    1 |    2 |    3 |    6 | ▇▃▁▁▁ |
-| time_mins     |         0 |             1 |    8.49 |   4.08 |   3 |    4 |   12 |   12 |   12 | ▅▁▁▁▇ |
-| distance      |         0 |             1 | 2096.24 | 925.14 | 833 | 1085 | 2571 | 2965 | 3110 | ▆▁▁▂▇ |
-| stroke_rate   |         0 |             1 |   23.24 |   4.08 |  14 |   22 |   22 |   27 |   30 | ▁▅▇▃▇ |
+| skim_variable | n_missing | complete_rate |    mean |     sd |  p0 |  p25 |    p50 |  p75 | p100 | hist  |
+|:--------------|----------:|--------------:|--------:|-------:|----:|-----:|-------:|-----:|-----:|:------|
+| erg_no        |         0 |             1 |    2.11 |   1.15 |   1 |    1 |    2.0 |    3 |    6 | ▇▃▁▁▁ |
+| time_mins     |         0 |             1 |    8.73 |   4.03 |   3 |    4 |   12.0 |   12 |   12 | ▅▁▁▁▇ |
+| distance      |         0 |             1 | 2156.18 | 920.40 | 833 | 1085 | 2666.5 | 3006 | 3110 | ▆▁▁▂▇ |
+| stroke_rate   |         0 |             1 |   22.89 |   4.24 |  14 |   20 |   22.0 |   27 |   30 | ▂▅▇▃▇ |
 
 **Variable type: POSIXct**
 
@@ -115,7 +115,7 @@ print(summary_stats)
     ##   <chr>     <dbl>          <dbl>          <dbl>      <dbl>             <dbl>
     ## 1 Joel       264.           87.3          33488        132               Inf
     ## 2 Josh       240.          102.           20642         90               Inf
-    ## 3 Rory       256.          112.           31816        126               Inf
+    ## 3 Rory       254.          123.           40742        162               Inf
 
 ``` r
 ggplot(processed_data, aes(x = date, y = burnout_index, color = rower)) +
