@@ -129,6 +129,8 @@ ggplot(processed_data, aes(x = date, y = speed, color = rower)) +
 ```{r}
 # Mixed-Effects Model
 speed_model <- lmer(speed ~ days_between_sessions + (1 + days_between_sessions|rower), data=processed_data)
+speed_model <- lmer(speed ~ days_between_sessions + (1|rower), data=processed_data)
+summary(speed_model)
 
 # Visualizations
 
