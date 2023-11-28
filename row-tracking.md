@@ -19,7 +19,7 @@ skim(rowing_data)
 |                                                  |             |
 |:-------------------------------------------------|:------------|
 | Name                                             | rowing_data |
-| Number of rows                                   | 58          |
+| Number of rows                                   | 71          |
 | Number of columns                                | 6           |
 | \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_   |             |
 | Column type frequency:                           |             |
@@ -35,22 +35,22 @@ Data summary
 
 | skim_variable | n_missing | complete_rate | min | max | empty | n_unique | whitespace |
 |:--------------|----------:|--------------:|----:|----:|------:|---------:|-----------:|
-| rower         |         0 |             1 |   4 |   4 |     0 |        3 |          0 |
+| rower         |         0 |             1 |   4 |   6 |     0 |        4 |          0 |
 
 **Variable type: numeric**
 
-| skim_variable | n_missing | complete_rate |    mean |     sd |  p0 |     p25 |    p50 |     p75 | p100 | hist  |
-|:--------------|----------:|--------------:|--------:|-------:|----:|--------:|-------:|--------:|-----:|:------|
-| erg_no        |         0 |             1 |    2.16 |   1.12 |   1 |    1.00 |    2.0 |    3.00 |    6 | ▇▃▁▁▁ |
-| time_mins     |         0 |             1 |    8.97 |   3.66 |   3 |    4.50 |   12.0 |   12.00 |   12 | ▃▁▂▁▇ |
-| distance      |         0 |             1 | 2241.66 | 849.94 | 833 | 1230.75 | 2586.5 | 2995.75 | 3535 | ▇▂▅▇▇ |
-| stroke_rate   |         0 |             1 |   23.22 |   3.86 |  14 |   22.00 |   22.0 |   26.00 |   30 | ▁▃▇▆▅ |
+| skim_variable | n_missing | complete_rate |    mean |     sd |  p0 |     p25 |  p50 |  p75 | p100 | hist  |
+|:--------------|----------:|--------------:|--------:|-------:|----:|--------:|-----:|-----:|-----:|:------|
+| erg_no        |         0 |             1 |    2.07 |   1.09 |   1 |    1.00 |    2 |    3 |    6 | ▇▃▁▁▁ |
+| time_mins     |         0 |             1 |    9.23 |   3.51 |   3 |    6.31 |   12 |   12 |   12 | ▃▁▂▁▇ |
+| distance      |         0 |             1 | 2313.11 | 803.84 | 833 | 1832.50 | 2731 | 2995 | 3535 | ▆▁▅▇▇ |
+| stroke_rate   |         0 |             1 |   22.94 |   4.42 |  14 |   21.00 |   22 |   26 |   30 | ▂▅▇▅▆ |
 
 **Variable type: POSIXct**
 
-| skim_variable | n_missing | complete_rate | min        | max        | median              | n_unique |
-|:--------------|----------:|--------------:|:-----------|:-----------|:--------------------|---------:|
-| date          |         0 |             1 | 2023-10-09 | 2023-11-14 | 2023-10-24 12:00:00 |        9 |
+| skim_variable | n_missing | complete_rate | min        | max        | median     | n_unique |
+|:--------------|----------:|--------------:|:-----------|:-----------|:-----------|---------:|
+| date          |         0 |             1 | 2023-10-09 | 2023-11-27 | 2023-10-31 |       11 |
 
 ``` r
 calculate_days_between <- function(data) {
@@ -115,12 +115,13 @@ summary_stats <- processed_data %>%
 print(summary_stats)
 ```
 
-    ## # A tibble: 3 × 6
-    ##   rower avg_speed avg_efficiency total_distance total_time avg_burnout_index
-    ##   <chr>     <dbl>          <dbl>          <dbl>      <dbl>             <dbl>
-    ## 1 Joel       264.           95.8          43147        168               Inf
-    ## 2 Josh       246.          102.           37738        158               Inf
-    ## 3 Rory       256.          114.           49131        194               Inf
+    ## # A tibble: 4 × 6
+    ##   rower  avg_speed avg_efficiency total_distance total_time avg_burnout_index
+    ##   <chr>      <dbl>          <dbl>          <dbl>      <dbl>             <dbl>
+    ## 1 Hamish      258.          143.           10828       42.8               Inf
+    ## 2 Joel        266.           94.4          45147      175.                Inf
+    ## 3 Josh        247.          110.           48359      201.                Inf
+    ## 4 Rory        256.          119.           59897      237.                Inf
 
 ``` r
 ggplot(processed_data, aes(x = date, y = burnout_index, color = rower)) +
@@ -175,7 +176,7 @@ ggplot(processed_data, aes(x = date, y = speed, color = rower)) +
 speed_model <- lmer(speed ~ days_between_sessions + (1 + days_between_sessions|rower), data=processed_data)
 ```
 
-    ## boundary (singular) fit: see help('isSingular')
+    ## boundary (singular) fit: see ?isSingular
 
 ``` r
 speed_model <- lmer(speed ~ days_between_sessions + (1|rower), data=processed_data)
@@ -186,26 +187,26 @@ summary(speed_model)
     ## Formula: speed ~ days_between_sessions + (1 | rower)
     ##    Data: processed_data
     ## 
-    ## REML criterion at convergence: 505.6
+    ## REML criterion at convergence: 631
     ## 
     ## Scaled residuals: 
-    ##      Min       1Q   Median       3Q      Max 
-    ## -2.65036 -0.61056 -0.04959  0.79691  1.78699 
+    ##     Min      1Q  Median      3Q     Max 
+    ## -2.4969 -0.5473 -0.1145  0.7343  1.9466 
     ## 
     ## Random effects:
     ##  Groups   Name        Variance Std.Dev.
-    ##  rower    (Intercept)  61.3     7.83   
-    ##  Residual             383.1    19.57   
-    ## Number of obs: 58, groups:  rower, 3
+    ##  rower    (Intercept)  52.29    7.232  
+    ##  Residual             445.58   21.109  
+    ## Number of obs: 71, groups:  rower, 4
     ## 
     ## Fixed effects:
-    ##                       Estimate Std. Error t value
-    ## (Intercept)           257.0432     5.3452  48.088
-    ## days_between_sessions  -0.8808     0.6941  -1.269
+    ##                        Estimate Std. Error t value
+    ## (Intercept)           256.45126    4.75905  53.887
+    ## days_between_sessions   0.06179    0.63744   0.097
     ## 
     ## Correlation of Fixed Effects:
     ##             (Intr)
-    ## dys_btwn_ss -0.229
+    ## dys_btwn_ss -0.269
 
 ``` r
 # Visualizations
