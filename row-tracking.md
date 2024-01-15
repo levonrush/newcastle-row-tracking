@@ -19,7 +19,7 @@ skim(rowing_data)
 |                                                  |             |
 |:-------------------------------------------------|:------------|
 | Name                                             | rowing_data |
-| Number of rows                                   | 71          |
+| Number of rows                                   | 103         |
 | Number of columns                                | 6           |
 | \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_   |             |
 | Column type frequency:                           |             |
@@ -39,18 +39,18 @@ Data summary
 
 **Variable type: numeric**
 
-| skim_variable | n_missing | complete_rate |    mean |     sd |  p0 |     p25 |  p50 |  p75 | p100 | hist  |
-|:--------------|----------:|--------------:|--------:|-------:|----:|--------:|-----:|-----:|-----:|:------|
-| erg_no        |         0 |             1 |    2.07 |   1.09 |   1 |    1.00 |    2 |    3 |    6 | ▇▃▁▁▁ |
-| time_mins     |         0 |             1 |    9.23 |   3.51 |   3 |    6.31 |   12 |   12 |   12 | ▃▁▂▁▇ |
-| distance      |         0 |             1 | 2313.11 | 803.84 | 833 | 1832.50 | 2731 | 2995 | 3535 | ▆▁▅▇▇ |
-| stroke_rate   |         0 |             1 |   22.94 |   4.42 |  14 |   21.00 |   22 |   26 |   30 | ▂▅▇▅▆ |
+| skim_variable | n_missing | complete_rate |    mean |     sd |     p0 |  p25 |     p50 |  p75 | p100 | hist  |
+|:--------------|----------:|--------------:|--------:|-------:|-------:|-----:|--------:|-----:|-----:|:------|
+| erg_no        |         0 |             1 |    2.38 |   1.41 |   1.00 |    1 |    2.00 |    3 |    6 | ▇▃▁▁▁ |
+| time_mins     |         0 |             1 |    8.14 |   3.49 |   1.65 |    6 |    6.85 |   12 |   12 | ▂▂▆▂▇ |
+| distance      |         0 |             1 | 2070.54 | 806.06 | 500.00 | 1533 | 2000.00 | 2912 | 3535 | ▆▇▅▆▇ |
+| stroke_rate   |         0 |             1 |   23.47 |   4.12 |  14.00 |   22 |   22.00 |   26 |   31 | ▁▂▇▃▃ |
 
 **Variable type: POSIXct**
 
 | skim_variable | n_missing | complete_rate | min        | max        | median     | n_unique |
 |:--------------|----------:|--------------:|:-----------|:-----------|:-----------|---------:|
-| date          |         0 |             1 | 2023-10-09 | 2023-11-27 | 2023-10-31 |       11 |
+| date          |         0 |             1 | 2023-10-09 | 2024-01-15 | 2023-11-14 |       14 |
 
 ``` r
 calculate_days_between <- function(data) {
@@ -118,10 +118,10 @@ print(summary_stats)
     ## # A tibble: 4 × 6
     ##   rower  avg_speed avg_efficiency total_distance total_time avg_burnout_index
     ##   <chr>      <dbl>          <dbl>          <dbl>      <dbl>             <dbl>
-    ## 1 Hamish      258.          143.           10828       42.8               Inf
-    ## 2 Joel        266.           94.4          45147      175.                Inf
-    ## 3 Josh        247.          110.           48359      201.                Inf
-    ## 4 Rory        256.          119.           59897      237.                Inf
+    ## 1 Hamish      270.           79.6          25548       98.3               Inf
+    ## 2 Joel        267.           87.8          56659      217.                Inf
+    ## 3 Josh        250.           99.5          59496      244.                Inf
+    ## 4 Rory        260.          107.           71563      280.                Inf
 
 ``` r
 ggplot(processed_data, aes(x = date, y = burnout_index, color = rower)) +
@@ -187,26 +187,26 @@ summary(speed_model)
     ## Formula: speed ~ days_between_sessions + (1 | rower)
     ##    Data: processed_data
     ## 
-    ## REML criterion at convergence: 631
+    ## REML criterion at convergence: 908.1
     ## 
     ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -2.4969 -0.5473 -0.1145  0.7343  1.9466 
+    ## -3.3709 -0.5687 -0.0440  0.7052  1.7721 
     ## 
     ## Random effects:
     ##  Groups   Name        Variance Std.Dev.
-    ##  rower    (Intercept)  52.29    7.232  
-    ##  Residual             445.58   21.109  
-    ## Number of obs: 71, groups:  rower, 4
+    ##  rower    (Intercept)  60.75    7.794  
+    ##  Residual             394.05   19.851  
+    ## Number of obs: 103, groups:  rower, 4
     ## 
     ## Fixed effects:
-    ##                        Estimate Std. Error t value
-    ## (Intercept)           256.45126    4.75905  53.887
-    ## days_between_sessions   0.06179    0.63744   0.097
+    ##                       Estimate Std. Error t value
+    ## (Intercept)           258.7006     4.4885  57.636
+    ## days_between_sessions   0.8144     0.2769   2.941
     ## 
     ## Correlation of Fixed Effects:
     ##             (Intr)
-    ## dys_btwn_ss -0.269
+    ## dys_btwn_ss -0.210
 
 ``` r
 # Visualizations
