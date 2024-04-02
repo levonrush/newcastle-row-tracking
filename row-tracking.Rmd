@@ -18,13 +18,31 @@ rowing_data <- read_sheet(gs_url, sheet = "Erg Times") %>% clean_names()
 
 skim(rowing_data)
 ```
+# Metric Derivation
+
 
 ```{r, message=FALSE, warning=FALSE}
 calculate_days_between <- function(data) {
+  
+  # do the calc
   data %>%
     arrange(rower, date) %>%
     group_by(rower) %>%
-    mutate(days_between_sessions = date - lag(date, default = first(date)))
+    mutate(
+      # Calculate days between sessions including zeros
+      days_between_sessions = as.numeric(difftime(date, lag(date, default = date[1]), units = "days"))
+    ) %>%
+    ungroup() # Ensure that subsequent operations are not affected by grouping
+  
+  # Replace zeros with NAs to ignore same-day sessions
+  data <- data %>%
+    group_by(rower) %>%
+    mutate(
+      days_between_sessions = ifelse(days_between_sessions == 0, NA, days_between_sessions)
+    ) %>%
+    fill(days_between_sessions, .direction = "down") %>%
+    ungroup()
+
 }
 
 calculate_speed <- function(data) {
@@ -43,13 +61,6 @@ calculate_burnout_index <- function(data) {
   data %>% mutate(burnout_index = workload / days_between_sessions - efficiency)
 }
 
-calculate_days_between <- function(data) {
-  data %>%
-    arrange(rower, date) %>%
-    group_by(rower) %>%
-    mutate(days_between_sessions = as.numeric(difftime(date, lag(date, default = first(date)), units="days")))
-}
-
 calculate_relative_improvement <- function(data) {
   data %>%
     group_by(rower) %>%
@@ -64,8 +75,6 @@ processed_data <- rowing_data %>%
   calculate_workload() %>%
   calculate_burnout_index() %>%
   calculate_relative_improvement()
-
-# skim(processed_data)
 ```
 
 ```{r}
@@ -86,7 +95,7 @@ print(summary_stats)
 ```{r, message=FALSE, warning=FALSE}
 ggplot(processed_data, aes(x = date, y = burnout_index, color = rower)) +
   geom_point() +
-  geom_smooth(se = FALSE) +
+  geom_smooth(se = F) +
   labs(title = "Burnout Index Over Time",
        y = "Burnout Index",
        x = "Date") +
