@@ -19,7 +19,7 @@ skim(rowing_data)
 |                                                  |             |
 |:-------------------------------------------------|:------------|
 | Name                                             | rowing_data |
-| Number of rows                                   | 103         |
+| Number of rows                                   | 106         |
 | Number of columns                                | 6           |
 | \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_   |             |
 | Column type frequency:                           |             |
@@ -35,29 +35,47 @@ Data summary
 
 | skim_variable | n_missing | complete_rate | min | max | empty | n_unique | whitespace |
 |:--------------|----------:|--------------:|----:|----:|------:|---------:|-----------:|
-| rower         |         0 |             1 |   4 |   6 |     0 |        4 |          0 |
+| rower         |         0 |             1 |   4 |   6 |     0 |        5 |          0 |
 
 **Variable type: numeric**
 
-| skim_variable | n_missing | complete_rate |    mean |     sd |     p0 |  p25 |     p50 |  p75 | p100 | hist  |
-|:--------------|----------:|--------------:|--------:|-------:|-------:|-----:|--------:|-----:|-----:|:------|
-| erg_no        |         0 |             1 |    2.38 |   1.41 |   1.00 |    1 |    2.00 |    3 |    6 | ▇▃▁▁▁ |
-| time_mins     |         0 |             1 |    8.14 |   3.49 |   1.65 |    6 |    6.85 |   12 |   12 | ▂▂▆▂▇ |
-| distance      |         0 |             1 | 2070.54 | 806.06 | 500.00 | 1533 | 2000.00 | 2912 | 3535 | ▆▇▅▆▇ |
-| stroke_rate   |         0 |             1 |   23.47 |   4.12 |  14.00 |   22 |   22.00 |   26 |   31 | ▁▂▇▃▃ |
+| skim_variable | n_missing | complete_rate |    mean |     sd |     p0 |    p25 |     p50 |     p75 | p100 | hist  |
+|:--------------|----------:|--------------:|--------:|-------:|-------:|-------:|--------:|--------:|-----:|:------|
+| erg_no        |         0 |             1 |    2.37 |   1.40 |   1.00 |    1.0 |    2.00 |    3.00 |    6 | ▇▃▁▁▁ |
+| time_mins     |         0 |             1 |    8.08 |   3.46 |   1.65 |    6.0 |    6.78 |   12.00 |   12 | ▂▂▇▂▇ |
+| distance      |         0 |             1 | 2059.33 | 797.23 | 500.00 | 1534.5 | 2000.00 | 2904.25 | 3535 | ▅▇▅▅▆ |
+| stroke_rate   |         0 |             1 |   23.55 |   4.09 |  14.00 |   22.0 |   23.00 |   26.00 |   31 | ▁▂▇▃▃ |
 
 **Variable type: POSIXct**
 
 | skim_variable | n_missing | complete_rate | min        | max        | median     | n_unique |
 |:--------------|----------:|--------------:|:-----------|:-----------|:-----------|---------:|
-| date          |         0 |             1 | 2023-10-09 | 2024-01-15 | 2023-11-14 |       14 |
+| date          |         0 |             1 | 2023-10-09 | 2024-01-16 | 2023-11-14 |       15 |
+
+# Metric Derivation
 
 ``` r
 calculate_days_between <- function(data) {
-  data %>%
+  
+  # do the calc
+  data <- data %>%
     arrange(rower, date) %>%
     group_by(rower) %>%
-    mutate(days_between_sessions = date - lag(date, default = first(date)))
+    mutate(
+      # Calculate days between sessions including zeros
+      days_between_sessions = as.numeric(difftime(date, lag(date, default = date[1]), units = "days"))
+    ) %>%
+    ungroup() # Ensure that subsequent operations are not affected by grouping
+  
+  # Replace zeros with NAs to ignore same-day sessions
+  data <- data %>%
+    group_by(rower) %>%
+    mutate(
+      days_between_sessions = ifelse(days_between_sessions == 0, NA, days_between_sessions)
+    ) %>%
+    fill(days_between_sessions, .direction = "down") %>%
+    ungroup()
+
 }
 
 calculate_speed <- function(data) {
@@ -76,13 +94,6 @@ calculate_burnout_index <- function(data) {
   data %>% mutate(burnout_index = workload / days_between_sessions - efficiency)
 }
 
-calculate_days_between <- function(data) {
-  data %>%
-    arrange(rower, date) %>%
-    group_by(rower) %>%
-    mutate(days_between_sessions = as.numeric(difftime(date, lag(date, default = first(date)), units="days")))
-}
-
 calculate_relative_improvement <- function(data) {
   data %>%
     group_by(rower) %>%
@@ -97,8 +108,6 @@ processed_data <- rowing_data %>%
   calculate_workload() %>%
   calculate_burnout_index() %>%
   calculate_relative_improvement()
-
-# skim(processed_data)
 ```
 
 ``` r
@@ -115,18 +124,19 @@ summary_stats <- processed_data %>%
 print(summary_stats)
 ```
 
-    ## # A tibble: 4 × 6
+    ## # A tibble: 5 × 6
     ##   rower  avg_speed avg_efficiency total_distance total_time avg_burnout_index
     ##   <chr>      <dbl>          <dbl>          <dbl>      <dbl>             <dbl>
-    ## 1 Hamish      270.           79.6          25548       98.3               Inf
-    ## 2 Joel        267.           87.8          56659      217.                Inf
-    ## 3 Josh        250.           99.5          59496      244.                Inf
-    ## 4 Rory        260.          107.           71563      280.                Inf
+    ## 1 Hamish      270.           79.6          25548       98.3              46.6
+    ## 2 James       279.           63.7           5023       18               NaN  
+    ## 3 Joel        267.           87.8          56659      217.               46.0
+    ## 4 Josh        250.           99.5          59496      244.               22.1
+    ## 5 Rory        260.          107.           71563      280.               12.7
 
 ``` r
 ggplot(processed_data, aes(x = date, y = burnout_index, color = rower)) +
   geom_point() +
-  geom_smooth(se = FALSE) +
+  geom_smooth(se = F) +
   labs(title = "Burnout Index Over Time",
        y = "Burnout Index",
        x = "Date") +
@@ -174,11 +184,6 @@ ggplot(processed_data, aes(x = date, y = speed, color = rower)) +
 ``` r
 # Mixed-Effects Model
 speed_model <- lmer(speed ~ days_between_sessions + (1 + days_between_sessions|rower), data=processed_data)
-```
-
-    ## boundary (singular) fit: see ?isSingular
-
-``` r
 speed_model <- lmer(speed ~ days_between_sessions + (1|rower), data=processed_data)
 summary(speed_model)
 ```
@@ -187,26 +192,26 @@ summary(speed_model)
     ## Formula: speed ~ days_between_sessions + (1 | rower)
     ##    Data: processed_data
     ## 
-    ## REML criterion at convergence: 908.1
+    ## REML criterion at convergence: 820.3
     ## 
     ## Scaled residuals: 
     ##     Min      1Q  Median      3Q     Max 
-    ## -3.3709 -0.5687 -0.0440  0.7052  1.7721 
+    ## -3.2607 -0.6062 -0.2960  0.7610  1.9521 
     ## 
     ## Random effects:
     ##  Groups   Name        Variance Std.Dev.
-    ##  rower    (Intercept)  60.75    7.794  
-    ##  Residual             394.05   19.851  
-    ## Number of obs: 103, groups:  rower, 4
+    ##  rower    (Intercept)  33.15    5.757  
+    ##  Residual             363.12   19.056  
+    ## Number of obs: 94, groups:  rower, 4
     ## 
     ## Fixed effects:
     ##                       Estimate Std. Error t value
-    ## (Intercept)           258.7006     4.4885  57.636
-    ## days_between_sessions   0.8144     0.2769   2.941
+    ## (Intercept)           257.5908     4.2838  60.132
+    ## days_between_sessions   0.4683     0.2085   2.246
     ## 
     ## Correlation of Fixed Effects:
     ##             (Intr)
-    ## dys_btwn_ss -0.210
+    ## dys_btwn_ss -0.572
 
 ``` r
 # Visualizations
@@ -216,6 +221,8 @@ ggplot(processed_data, aes(x=days_between_sessions, y=speed, color=rower)) +
   geom_line() +
   labs(title="Individual Speed Trajectories Over Time", x="Days Between Sessions", y="Speed")
 ```
+
+    ## Warning: Removed 12 rows containing missing values (`geom_line()`).
 
 ![](row-tracking_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 

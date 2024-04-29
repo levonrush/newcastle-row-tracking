@@ -25,7 +25,7 @@ skim(rowing_data)
 calculate_days_between <- function(data) {
   
   # do the calc
-  data %>%
+  data <- data %>%
     arrange(rower, date) %>%
     group_by(rower) %>%
     mutate(
